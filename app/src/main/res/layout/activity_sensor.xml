@@ -67,16 +67,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Training"
+        android:text="Training Label"
         android:id="@+id/textView"
-        android:layout_alignRight="@+id/trainingToggleButton"
-        android:layout_alignEnd="@+id/trainingToggleButton"
         android:layout_above="@+id/filterKnownApsToggleButton" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Scan Manually"
+        android:text="Scan WiFi Once"
         android:id="@+id/scanWifiApButton"
         android:layout_alignParentTop="true"
         android:layout_alignRight="@+id/sensorInfoTextView"
@@ -87,7 +85,7 @@
         android:layout_height="wrap_content"
         android:text="New ToggleButton"
         android:id="@+id/filterKnownApsToggleButton"
-        android:checked="false"
+        android:checked="true"
         android:layout_alignTop="@+id/trainingToggleButton"
         android:layout_toLeftOf="@+id/saveButton" />
 
@@ -107,9 +105,28 @@
         android:inputType="number"
         android:ems="10"
         android:id="@+id/trainingNumberEditText"
+        android:text="1"
         android:layout_alignBottom="@+id/trainingToggleButton"
-        android:layout_toRightOf="@+id/textView"
-        android:text="1" />
+        android:layout_toRightOf="@+id/trainingToggleButton" />
+
+    <ToggleButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/autoSampleToggleButton"
+        android:checked="false"
+        android:layout_alignBottom="@+id/trainingNumberEditText"
+        android:layout_alignRight="@+id/scanWifiApButton"
+        android:layout_alignEnd="@+id/scanWifiApButton" />
+
+    <TextView
+        android:layout_width="100px"
+        android:layout_height="wrap_content"
+        android:text="Auto Sample"
+        android:id="@+id/textView3"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_above="@+id/autoSampleToggleButton"
+        android:layout_toRightOf="@+id/saveButton" />
 
 
 </RelativeLayout>

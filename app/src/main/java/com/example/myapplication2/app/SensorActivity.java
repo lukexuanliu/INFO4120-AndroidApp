@@ -73,6 +73,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private Button sendButton;
     private ToggleButton trainingToggleButton;
     private ToggleButton filterKnownApsToggleButton;
+    private ToggleButton autoSampleToggleButton;
     private Button scanWifiApButton;
     private EditText trainingNumberEditText;
 
@@ -81,7 +82,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private static HashMap<String, WifiData> foundWifiDataMap;
 
     private static boolean ifFilterKnownAP;
-    private static final ArrayList<String> KNOWN_AP =
+    private static ArrayList<String> knownApArrayList =
             new ArrayList<String>(Arrays.asList( new String[]{"9c:1c:12:e0:d0:81","9c:1c:12:e0:dd:d0","9c:1c:12:e0:dd:d2","9c:1c:12:e0:dc:10","9c:1c:12:e0:dc:11","9c:1c:12:e0:dc:12"}));
 
     // sunday used APS carpenter first floor
@@ -124,6 +125,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
         sendButton = (Button) findViewById(R.id.sendButton);
         trainingToggleButton = (ToggleButton) findViewById(R.id.trainingToggleButton);
         filterKnownApsToggleButton = (ToggleButton) findViewById(R.id.filterKnownApsToggleButton);
+        autoSampleToggleButton = (ToggleButton) findViewById(R.id.autoSampleToggleButton);
         scanWifiApButton = (Button) findViewById(R.id.scanWifiApButton);
         trainingNumberEditText = (EditText) findViewById(R.id.trainingNumberEditText);
 
@@ -143,7 +145,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
         foundWifiDataList = new ArrayList<WifiData>();
         foundWifiDataMap = new HashMap<String, WifiData>();
         knownApWifiDataMap = new HashMap<String, WifiData>();
-        for(String knownAp : KNOWN_AP) knownApWifiDataMap.put(knownAp, new WifiData(knownAp));
+        for(String knownAp : knownApArrayList) knownApWifiDataMap.put(knownAp, new WifiData(knownAp));
 
         wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         this.registerReceiver(new BroadcastReceiver() {
@@ -172,9 +174,8 @@ public class SensorActivity extends Activity implements SensorEventListener {
             }
         });
 
-        scanWifiApButton.setOnClickListener(new View.OnClickListener(){
-            public void onClick(View v)
-            {
+        scanWifiApButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
                 wifiManager.startScan();
             }
         });
@@ -183,6 +184,33 @@ public class SensorActivity extends Activity implements SensorEventListener {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 ifFilterKnownAP = filterKnownApsToggleButton.isChecked();
+            }
+        });
+
+        autoSampleToggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    scanWifiApButton.setEnabled(false);
+                    saveButton.setEnabled(false);
+                    sendButton.setEnabled(false);
+                    trainingToggleButton.setChecked(false);
+                    trainingToggleButton.setEnabled(false);
+                    trainingNumberEditText.setText("0");
+                    trainingNumberEditText.setEnabled(false);
+                    filterKnownApsToggleButton.setChecked(true);
+                    filterKnownApsToggleButton.setEnabled(false);
+                    // start the auto scan process
+
+                } else {
+                    scanWifiApButton.setEnabled(true);
+                    saveButton.setEnabled(true);
+                    sendButton.setEnabled(true);
+                    trainingToggleButton.setEnabled(true);
+                    trainingNumberEditText.setText("1");
+                    trainingNumberEditText.setEnabled(true);
+                    filterKnownApsToggleButton.setEnabled(true);
+                }
             }
         });
 
@@ -351,7 +379,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
                 //// record all training wifi data to send to webserver
                 bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + FILENAME_TRAINING), true));
 
-                for(String knownAp : KNOWN_AP) // save all data from known wifi map
+                for(String knownAp : knownApArrayList) // save all data from known wifi map
                 {
                     bw.write(knownApWifiDataMap.get(knownAp).level+",");
                 }
@@ -366,7 +394,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
                 bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + FILENAME_SAMPLES), true));
 
                 // record all sample wifi data
-                for(String knownAp : KNOWN_AP) // save all data from known wifi map
+                for(String knownAp : knownApArrayList) // save all data from known wifi map
                 {
                     bw.write(knownApWifiDataMap.get(knownAp).level+",");
                 }
@@ -377,7 +405,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
                 // record single sample wifi data to send to webserver
                 bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + FILENAME_SAMPLE), false));
 
-                for(String knownAp : KNOWN_AP) // save all data from known wifi map
+                for(String knownAp : knownApArrayList) // save all data from known wifi map
                 {
                     bw.write(knownApWifiDataMap.get(knownAp).level+",");
                 }
@@ -395,7 +423,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
             bw.write("magnetometer," + magnetometerValueStr + ";\n"
                     + "barometer," + barometerValueStr + ";\n");
 
-            for(String knownAp : KNOWN_AP) // save all data from known wifi map
+            for(String knownAp : knownApArrayList) // save all data from known wifi map
             {
                 bw.write(knownApWifiDataMap.get(knownAp).printWifiData(3) + "\n");
             }
@@ -412,7 +440,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
             str += label + ";\n";
             str += "magnetometer," + magnetometerValueStr + ";\n"
                     + "barometer," + barometerValueStr + ";\n";
-            for(String knownAp : KNOWN_AP) // save all data from known wifi map
+            for(String knownAp : knownApArrayList) // save all data from known wifi map
             {
                 str += knownApWifiDataMap.get(knownAp).printWifiData(3) + "\n";
             }

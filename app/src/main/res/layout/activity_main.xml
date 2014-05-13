@@ -17,12 +17,58 @@
         android:layout_centerHorizontal="true" />
 
     <Button
+        android:layout_width="400px"
+        android:layout_height="wrap_content"
+        android:text="Start the Localization"
+        android:id="@+id/startRecordButton"
+        android:layout_marginTop="33dp"
+        android:layout_below="@+id/titleText"
+        android:layout_centerHorizontal="true" />
+
+    <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Click to Record Manually"
-        android:id="@+id/startRecordButton"
-        android:layout_below="@+id/titleText"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="39dp" />
+        android:inputType="textMultiLine"
+        android:ems="10"
+        android:id="@+id/editText"
+        android:text="9c:1c:12:e0:d0:81\n9c:1c:12:e0:dd:d0\n9c:1c:12:e0:dd:d2\n9c:1c:12:e0:dc:10\n9c:1c:12:e0:dc:11\n9c:1c:12:e0:dc:12"
+        android:layout_below="@+id/textView"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignRight="@+id/textView"
+        android:layout_alignEnd="@+id/textView" />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="200px"
+        android:layout_height="wrap_content"
+        android:text="Reset Training"
+        android:id="@+id/button2"
+        android:layout_below="@+id/startRecordButton"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="30dp" />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="200px"
+        android:layout_height="wrap_content"
+        android:text="Reset All"
+        android:id="@+id/button3"
+        android:layout_below="@+id/button2"
+        android:layout_alignLeft="@+id/button2"
+        android:layout_alignStart="@+id/button2" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Known Access Points:"
+        android:id="@+id/textView"
+        android:layout_below="@+id/button3"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 
 </RelativeLayout>
