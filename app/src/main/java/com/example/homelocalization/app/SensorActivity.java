@@ -1,4 +1,4 @@
-package com.example.myapplication2.app;
+package com.example.homelocalization.app;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;

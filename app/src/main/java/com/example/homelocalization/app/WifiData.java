@@ -1,4 +1,4 @@
-package com.example.myapplication2.app;
+package com.example.homelocalization.app;
 
 /**
  * Created by rujiezhou on 5/1/14.
