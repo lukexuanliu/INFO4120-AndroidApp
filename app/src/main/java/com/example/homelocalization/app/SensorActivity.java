@@ -82,31 +82,17 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private static HashMap<String, WifiData> foundWifiDataMap;
 
     private static boolean ifFilterKnownAP;
-    private static ArrayList<String> knownApArrayList =
-            new ArrayList<String>(Arrays.asList( new String[]{"9c:1c:12:e0:d0:81","9c:1c:12:e0:dd:d0","9c:1c:12:e0:dd:d2","9c:1c:12:e0:dc:10","9c:1c:12:e0:dc:11","9c:1c:12:e0:dc:12"}));
-
-    // sunday used APS carpenter first floor
-    // "9c:1c:12:e0:d0:81","9c:1c:12:e0:dd:d0","9c:1c:12:e0:dd:d2","9c:1c:12:e0:dc:10","9c:1c:12:e0:dc:11","9c:1c:12:e0:dc:12"
-
-    //third time used APS
-    // "9c:1c:12:e0:c8:d0", "9c:1c:12:e0:c8:d1", "9c:1c:12:e0:c8:d2", "9c:1c:12:e0:c8:d3"
-
-    //second time used APs
-    // "9c:1c:12:e0:c7:72","9c:1c:12:e0:c7:62","9c:1c:12:e0:c7:71"
-
-    //first time used APs
-    //"00:0b:86:54:a0:08","00:24:6c:72:cd:d3","00:24:6c:72:cd:d0"
-
-    // THOMAS home wifi aps
-    // "64:66:b3:85:3b:70","64:66:b3:85:3f:6a","e8:94:f6:84:b1:82","e8:94:f6:84:b1:68","00:30:44:12:8d:b5","dc:9f:db:6a:e8:62"
+    private static ArrayList<String> knownApArrayList;
 
     private String directoryToSave;
-    private static final String FILENAME_TRAINING = "training.txt";
-    private static final String FILENAME_ALLOUTPUTS = "all_outputs.txt";
-    private static final String FILENAME_SAMPLES = "samples.txt";
-    private static final String FILENAME_SAMPLE = "sample.txt";
-    private static final String FILENAME_SINGLEOUTPUT = "sensorStrength.txt";
-    private static final String FILENAME_ALLSENSORS = "all_sensors.txt";
+    private String fileNameTraining;
+    private String fileNameAllOutputs;
+    private String fileNameSamples;
+    private String fileNameSample;
+    private String fileNameSingleOutput;
+    private String fileNameAllSensors;
+    private String knownApListString;
+    
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,8 +102,6 @@ public class SensorActivity extends Activity implements SensorEventListener {
         sensorContext = this.getApplicationContext();
 
         Toast.makeText(this,"Started",500).show();
-
-        makeNecessaryFolder("project");
 
         sensorInfoTextView = (TextView) findViewById(R.id.sensorInfoTextView);
         wifiInfoTextView = (TextView) findViewById(R.id.wifiInfoTextView);
@@ -129,6 +113,8 @@ public class SensorActivity extends Activity implements SensorEventListener {
         scanWifiApButton = (Button) findViewById(R.id.scanWifiApButton);
         trainingNumberEditText = (EditText) findViewById(R.id.trainingNumberEditText);
 
+        getValuesFromMainActivity();
+
         sensorManager = (SensorManager) getApplication().getSystemService(
                 Context.SENSOR_SERVICE);
         sensorPressure = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
@@ -139,6 +125,8 @@ public class SensorActivity extends Activity implements SensorEventListener {
         sensorValuesMap = new HashMap<String, Double>();
         sensorValuesMap.put("Magnetometer", -1.0);
         sensorValuesMap.put("Barometer", -1.0);
+
+        populateKnownApList();
 
         ifFilterKnownAP = filterKnownApsToggleButton.isChecked();
 
@@ -285,21 +273,6 @@ public class SensorActivity extends Activity implements SensorEventListener {
 
     }
 
-    private void makeNecessaryFolder(String assignmentId) {
-        //make the folder for this assignment
-        File f = new File("/sdcard/Ubicomp-INFO4120/" + assignmentId);
-        if(f.exists() == false)
-            f.mkdir();
-
-        //directory name to save
-        try {
-            directoryToSave = f.getCanonicalPath();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
     private void handleWifiScanResult(){
 
         StringBuffer sb = new StringBuffer();
@@ -377,7 +350,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
             if (ifTraining)
             {
                 //// record all training wifi data to send to webserver
-                bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + FILENAME_TRAINING), true));
+                bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + fileNameTraining), true));
 
                 for(String knownAp : knownApArrayList) // save all data from known wifi map
                 {
@@ -391,7 +364,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
             }
             else //isSample
             {
-                bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + FILENAME_SAMPLES), true));
+                bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + fileNameSamples), true));
 
                 // record all sample wifi data
                 for(String knownAp : knownApArrayList) // save all data from known wifi map
@@ -403,7 +376,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
                 bw.close();
 
                 // record single sample wifi data to send to webserver
-                bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + FILENAME_SAMPLE), false));
+                bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + fileNameSample), false));
 
                 for(String knownAp : knownApArrayList) // save all data from known wifi map
                 {
@@ -416,7 +389,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
 
 
             // record all history wifi outputs
-            bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + FILENAME_ALLOUTPUTS), true));
+            bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + fileNameAllOutputs), true));
             bw.write(timestamp+";\n");
             bw.write(ifTraining? "t," : "s,");
             bw.write(";\n");
@@ -431,9 +404,8 @@ public class SensorActivity extends Activity implements SensorEventListener {
             bw.write("\n");
             bw.close();
 
-
             // record single wifi output to send to webserver
-            FileOutputStream out = new FileOutputStream(directoryToSave + "/" + FILENAME_SINGLEOUTPUT);
+            FileOutputStream out = new FileOutputStream(directoryToSave + "/" + fileNameSingleOutput);
             String str = "";
             str += timestamp + ";\n";
             str += ifTraining? "t," : "s,";
@@ -448,7 +420,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
             out.close();
 
             // record all sensor info
-            bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + FILENAME_ALLSENSORS), true));
+            bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + fileNameAllSensors), true));
             bw.write(magnetometerValueStr + "," + barometerValueStr + "," + label + "\n");
             bw.close();
 
@@ -471,10 +443,10 @@ public class SensorActivity extends Activity implements SensorEventListener {
             try {
                 String str = "";
 
-                postDataFile(FILENAME_SINGLEOUTPUT, "upload_stream.php");
-                postDataFile(FILENAME_SAMPLE, "upload_stream_sample.php");
-                postDataFile(FILENAME_SAMPLES, "upload_stream_samples.php");
-                str = postDataFile(FILENAME_TRAINING, "upload_stream_training.php");
+                postDataFile(fileNameSingleOutput, "upload_stream.php");
+                postDataFile(fileNameSample, "upload_stream_sample.php");
+                postDataFile(fileNameSamples, "upload_stream_samples.php");
+                str = postDataFile(fileNameTraining, "upload_stream_training.php");
 
                 return str;
 
@@ -564,8 +536,44 @@ public class SensorActivity extends Activity implements SensorEventListener {
 
     }
 
+    //
+    private void populateKnownApList()
+    {
+        String strs[] = knownApListString.split("\n");
+        knownApArrayList = new ArrayList<String>(Arrays.asList(strs));
+
+        // sunday used APS carpenter first floor
+        // "9c:1c:12:e0:d0:81","9c:1c:12:e0:dd:d0","9c:1c:12:e0:dd:d2","9c:1c:12:e0:dc:10","9c:1c:12:e0:dc:11","9c:1c:12:e0:dc:12"
+
+        //third time used APS
+        // "9c:1c:12:e0:c8:d0", "9c:1c:12:e0:c8:d1", "9c:1c:12:e0:c8:d2", "9c:1c:12:e0:c8:d3"
+
+        //second time used APs
+        // "9c:1c:12:e0:c7:72","9c:1c:12:e0:c7:62","9c:1c:12:e0:c7:71"
+
+        //first time used APs
+        //"00:0b:86:54:a0:08","00:24:6c:72:cd:d3","00:24:6c:72:cd:d0"
+
+        // THOMAS home wifi aps
+        // "64:66:b3:85:3b:70","64:66:b3:85:3f:6a","e8:94:f6:84:b1:82","e8:94:f6:84:b1:68","00:30:44:12:8d:b5","dc:9f:db:6a:e8:62"
+
+    }
+
+    private void getValuesFromMainActivity()
+    {
+        directoryToSave = getIntent().getExtras().getString("directoryToSave");;
+        fileNameTraining = this.getIntent().getExtras().getString("fileNameTraining");
+        fileNameAllOutputs = this.getIntent().getExtras().getString("fileNameAllOutputs");
+        fileNameSamples = this.getIntent().getExtras().getString("fileNameSamples");
+        fileNameSample = this.getIntent().getExtras().getString("fileNameSample");
+        fileNameSingleOutput = this.getIntent().getExtras().getString("fileNameSingleOutput");
+        fileNameAllSensors = this.getIntent().getExtras().getString("fileNameAllSensors");
+        knownApListString = this.getIntent().getExtras().getString("knownApListString");
+
+    }
+
     //*******************************************************************
-    //********************** private methods *********************
+    //********************** comparators *********************
     //*******************************************************************
     public class CustomComparator implements Comparator<WifiData>
     {

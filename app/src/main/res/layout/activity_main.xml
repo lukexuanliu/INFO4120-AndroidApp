@@ -30,7 +30,7 @@
         android:layout_height="wrap_content"
         android:inputType="textMultiLine"
         android:ems="10"
-        android:id="@+id/editText"
+        android:id="@+id/knownApEditText"
         android:text="9c:1c:12:e0:d0:81\n9c:1c:12:e0:dd:d0\n9c:1c:12:e0:dd:d2\n9c:1c:12:e0:dc:10\n9c:1c:12:e0:dc:11\n9c:1c:12:e0:dc:12"
         android:layout_below="@+id/textView"
         android:layout_alignParentLeft="true"
@@ -43,7 +43,7 @@
         android:layout_width="200px"
         android:layout_height="wrap_content"
         android:text="Reset Training"
-        android:id="@+id/button2"
+        android:id="@+id/resetTrainingButton"
         android:layout_below="@+id/startRecordButton"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
@@ -54,10 +54,10 @@
         android:layout_width="200px"
         android:layout_height="wrap_content"
         android:text="Reset All"
-        android:id="@+id/button3"
-        android:layout_below="@+id/button2"
-        android:layout_alignLeft="@+id/button2"
-        android:layout_alignStart="@+id/button2" />
+        android:id="@+id/resetAllButton"
+        android:layout_below="@+id/resetTrainingButton"
+        android:layout_alignLeft="@+id/resetTrainingButton"
+        android:layout_alignStart="@+id/resetTrainingButton" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -65,7 +65,7 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="Known Access Points:"
         android:id="@+id/textView"
-        android:layout_below="@+id/button3"
+        android:layout_below="@+id/resetAllButton"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentRight="true"
