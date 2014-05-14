@@ -96,13 +96,14 @@ public class SensorActivity extends Activity implements SensorEventListener {
 
     static TimerTask timerTask;
     final Handler handler = new Handler();
-    final Timer t = new Timer();
+    Timer t;
 
     private static boolean ifAutoSample;
     private static int autoModeSeekBarValue;
     private static String label;
+    private static boolean ifTraining;
 
-    static final int INTERVAL = 10000;
+    static final int INTERVAL = 12000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -219,6 +220,9 @@ public class SensorActivity extends Activity implements SensorEventListener {
                 autoModeSeekBarValue = progress;
                 try{
                     timerTask.cancel();
+                    t.cancel();
+                    t.purge();
+                    t = new Timer();
 
                     timerTask = new TimerTask() {
                         @Override
@@ -255,6 +259,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
         });
 
 
+        t = new Timer();
         timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -313,9 +318,6 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private void handleWifiScanResult(){
 
         StringBuffer sb = new StringBuffer();
-
-        Calendar c = Calendar.getInstance();
-        int seconds = c.get(Calendar.SECOND);
 
         for (ScanResult e1 : wifiManager.getScanResults()){
             WifiData w = new WifiData(e1.BSSID, e1.SSID, e1.frequency+"", e1.capabilities, e1.level*1.0, "");
@@ -381,7 +383,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
             label = trainingNumberEditText.getText().toString();
             if (label.equals("")) label = "-1";
 
-            boolean ifTraining = trainingToggleButton.isChecked();
+            ifTraining = trainingToggleButton.isChecked();
 
             String barometerValueStr = new DecimalFormat("##.##").format(sensorValuesMap.get("Barometer"));
             String magnetometerValueStr = new DecimalFormat("##.##").format(sensorValuesMap.get("Magnetometer"));
@@ -426,23 +428,6 @@ public class SensorActivity extends Activity implements SensorEventListener {
                 bw.close();
             }
 
-
-            // record all history wifi outputs
-            bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + fileNameAllOutputs), true));
-            bw.write(timestamp+";\n");
-            bw.write(ifTraining? "t," : "s,");
-            bw.write(label + ";\n");
-            bw.write("magnetometer," + magnetometerValueStr + ";\n"
-                    + "barometer," + barometerValueStr + ";\n");
-
-            for(String knownAp : knownApArrayList) // save all data from known wifi map
-            {
-                bw.write(knownApWifiDataMap.get(knownAp).printWifiData(3) + "\n");
-            }
-
-            bw.write("\n");
-            bw.close();
-
             // record single wifi output to send to webserver
             FileOutputStream out = new FileOutputStream(directoryToSave + "/" + fileNameSingleOutput);
             String str = "";
@@ -457,6 +442,11 @@ public class SensorActivity extends Activity implements SensorEventListener {
             }
             out.write(str.trim().getBytes());
             out.close();
+
+            // record all history wifi outputs
+            bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + fileNameAllOutputs), true));
+            bw.write(str + "\n");
+            bw.close();
 
             // record all sensor info
             bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + fileNameAllSensors), true));
@@ -480,14 +470,18 @@ public class SensorActivity extends Activity implements SensorEventListener {
         @Override
         protected String doInBackground(String... strings) {
             try {
-                String str = "";
+                String str = "", rtnStr = "";
 
-                postDataFile(fileNameSingleOutput, "upload_stream.php");
-                postDataFile(fileNameSample, "upload_stream_sample.php");
+                str = postDataFile(fileNameSingleOutput, "upload_stream.php");
+                if (str.contains("Exception")) rtnStr += str.substring(0,61) + "\n";
+                str = postDataFile(fileNameSample, "upload_stream_sample.php");
+                if (str.contains("Exception")) rtnStr += str.substring(0,61) + "\n";
                 str = postDataFile(fileNameSamples, "upload_stream_samples.php");
-                postDataFile(fileNameTraining, "upload_stream_training.php");
+                if (str.contains("Exception")) rtnStr += str.substring(0,61) + "\n";
+                str = postDataFile(fileNameTraining, "upload_stream_training.php");
+                if (str.contains("Exception")) rtnStr += str.substring(0,61) + "\n";
 
-                return str;
+                return rtnStr;
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -500,13 +494,13 @@ public class SensorActivity extends Activity implements SensorEventListener {
         protected void onPostExecute(String result) {
 
             if(result.contains("Exception")){
-                Toast.makeText(sensorContext, "Exception! "+result, 500).show();
+                Toast.makeText(sensorContext, "Exception! "+ result, 2000).show();
             }
-            else if (result==null){
-                Toast.makeText(sensorContext, "Success!", 500).show();
+            else if (result.equals("")){
+                Toast.makeText(sensorContext, "Post Success!", 500).show();
             }
             else {
-                Toast.makeText(sensorContext, "Response! "+result, 500).show();
+                Toast.makeText(sensorContext, "Response= "+result, 500).show();
             }
         }
     }

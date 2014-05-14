@@ -88,7 +88,7 @@ public class MainActivity extends ActionBarActivity {
                     new File(theDir, fstr).delete();
                 }
 
-                Toast.makeText(mainActivity, "System reset ALMOST complete!\nPlease restart the app!", 2000).show();
+                Toast.makeText(mainActivity, "System reset ALMOST complete!\nPlease restart the app!", 5000).show();
                 return true;
             }
         });
