@@ -14,6 +14,7 @@ import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -50,6 +51,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by rujiezhou on 4/12/14.
@@ -57,9 +60,6 @@ import java.util.Map;
 
 
 public class SensorActivity extends Activity implements SensorEventListener {
-
-    private final Handler h = new Handler();
-    static final int DELAY = 5000;
 
     private Context sensorContext;
     private Map<String, Double> sensorValuesMap;
@@ -92,10 +92,18 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private String fileNameSingleOutput;
     private String fileNameAllSensors;
     private String knownApListString;
-    
+
+    TimerTask timerTask;
+    final Handler handler = new Handler();
+    Timer t = new Timer();
+
+    private static boolean ifAutoSample;
+
+    static final int INTERVAL = 10000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sensor);
 
@@ -129,6 +137,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
         populateKnownApList();
 
         ifFilterKnownAP = filterKnownApsToggleButton.isChecked();
+        ifAutoSample = autoSampleToggleButton.isChecked();
 
         foundWifiDataList = new ArrayList<WifiData>();
         foundWifiDataMap = new HashMap<String, WifiData>();
@@ -199,44 +208,31 @@ public class SensorActivity extends Activity implements SensorEventListener {
                     trainingNumberEditText.setEnabled(true);
                     filterKnownApsToggleButton.setEnabled(true);
                 }
+
+                ifAutoSample = isChecked;
             }
         });
 
-        // the timer module, dont know if works
-//        Runnable r = new Runnable() {
-//            @Override
-//            public void run() {
-//                try{
-//                    //
-//                    wifiManager.startScan();
-//                    saveToFile();
-//
-//                    new PostDataAsyncTask().execute();
-//
-//                    h.postDelayed(this, DELAY);
-//                }
-//                catch(Exception ex)
-//                {
-//
-//                }
-//                finally{
-//                    h.postDelayed(this, DELAY);
-//                }
-//            }
-//        };
-//        h.postDelayed(r, DELAY);
 
+        timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(ifAutoSample) autoSample();
+                        //Toast.makeText(sensorContext, "timer event", 500).show();
+                    }
+                });
+            }
+        };
+        t.schedule(timerTask, 300, INTERVAL);
 
     }
 
     @Override
     public void onResume() {
         super.onResume();
-
-
-
-        //handler.post(processSensors);
-
 
     }
 
@@ -460,17 +456,15 @@ public class SensorActivity extends Activity implements SensorEventListener {
         @Override
         protected void onPostExecute(String result) {
 
-            if(result.equalsIgnoreCase("Exception Caught")){
-                Toast.makeText(sensorContext, "Upload Exception!", 2000).show();
+            if(result.contains("Exception")){
+                Toast.makeText(sensorContext, "Exception! "+result, 500).show();
             }
             else if (result==null){
-                Toast.makeText(sensorContext, "Success!", 2000).show();
+                Toast.makeText(sensorContext, "Success!", 500).show();
             }
             else {
-                Toast.makeText(sensorContext, "Response!"+result, 2000).show();
-
+                Toast.makeText(sensorContext, "Response! "+result, 500).show();
             }
-
         }
     }
 
@@ -497,15 +491,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
         catch(Exception ex)
         {//do nothing
         }
-        // verify the connection works
-//        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-//        nameValuePairs.add(new BasicNameValuePair("this", "is"));
-//        nameValuePairs.add(new BasicNameValuePair("sparta", "aaaaaaaaa!"));
-//        try{
-//            httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-//        }
-//        catch(Exception ex)
-//        {}
+
 
         String str="";
         try {
@@ -522,8 +508,6 @@ public class SensorActivity extends Activity implements SensorEventListener {
                 resEntity.consumeContent();
             }
 
-
-
             httpClient.getConnectionManager().shutdown();
 
             return "Finish postDataFile(), response " + str;
@@ -534,6 +518,13 @@ public class SensorActivity extends Activity implements SensorEventListener {
             return "Exception in postDataFile(): "+str;
         }
 
+    }
+
+    private void autoSample()
+    {
+        wifiManager.startScan();
+        saveToFile();
+        new PostDataAsyncTask().execute();
     }
 
     //

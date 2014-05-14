@@ -53,6 +53,7 @@ public class MainActivity extends ActionBarActivity {
             public void onClick(View v) {
 
                 // save potentially modified all known ap file
+                knownApListString = knownApEditText.getText().toString();
                 writeToFile(FILENAME_KNOWNAP, knownApEditText.getText().toString());
 
                 Intent intent = new Intent(v.getContext(), SensorActivity.class);
