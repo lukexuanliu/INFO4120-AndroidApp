@@ -1,5 +1,6 @@
 package com.example.homelocalization.app;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
@@ -7,6 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -37,6 +39,8 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        final Context mainActivity = this.getApplicationContext();
 
         startRecordButton = (Button) findViewById(R.id.startRecordButton);
         resetTrainingButton = (Button) findViewById(R.id.resetTrainingButton);
@@ -72,20 +76,31 @@ public class MainActivity extends ActionBarActivity {
             }
         });
 
-        resetAllButton.setOnClickListener(new View.OnClickListener() {
+        resetAllButton.setOnLongClickListener(new View.OnLongClickListener() {
 
             @Override
-            public void onClick(View v) {
+            public boolean onLongClick(View v) {
                 // erase all files
+                File theDir = new File(directoryToSave);
+                String[] files = theDir.list();
+                for (String fstr : files)
+                {
+                    new File(theDir, fstr).delete();
+                }
 
+                Toast.makeText(mainActivity, "System reset ALMOST complete!\nPlease restart the app!", 2000).show();
+                return true;
             }
         });
 
-        resetTrainingButton.setOnClickListener(new View.OnClickListener() {
+        resetTrainingButton.setOnLongClickListener(new View.OnLongClickListener() {
 
             @Override
-            public void onClick(View v) {
+            public boolean onLongClick(View v) {
                 // erase the training file
+
+                Toast.makeText(mainActivity, "Not Implemented!", 1000).show();
+                return true;
             }
         });
     }

@@ -42,7 +42,7 @@
         style="?android:attr/buttonStyleSmall"
         android:layout_width="200px"
         android:layout_height="wrap_content"
-        android:text="Reset Training"
+        android:text="Clear History"
         android:id="@+id/resetTrainingButton"
         android:layout_below="@+id/startRecordButton"
         android:layout_alignParentRight="true"

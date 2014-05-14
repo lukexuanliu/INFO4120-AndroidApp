@@ -112,7 +112,7 @@
     <ToggleButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/autoSampleToggleButton"
+        android:id="@+id/autoModeToggleButton"
         android:checked="false"
         android:layout_alignBottom="@+id/trainingNumberEditText"
         android:layout_alignRight="@+id/scanWifiApButton"
@@ -121,12 +121,24 @@
     <TextView
         android:layout_width="100px"
         android:layout_height="wrap_content"
-        android:text="Auto Sample"
+        android:text="Auto Mode"
         android:id="@+id/textView3"
+        android:layout_above="@+id/autoModeToggleButton"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <SeekBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/autoModeSpeedSeekBar"
+        android:layout_below="@+id/trainingNumberEditText"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:layout_above="@+id/autoSampleToggleButton"
-        android:layout_toRightOf="@+id/saveButton" />
+        android:layout_alignLeft="@+id/saveButton"
+        android:layout_alignStart="@+id/saveButton"
+        android:indeterminate="false"
+        android:max="2"
+        android:progress="1" />
 
 
 </RelativeLayout>

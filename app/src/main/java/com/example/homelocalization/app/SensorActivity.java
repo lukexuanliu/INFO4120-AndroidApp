@@ -14,11 +14,11 @@ import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -73,9 +73,10 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private Button sendButton;
     private ToggleButton trainingToggleButton;
     private ToggleButton filterKnownApsToggleButton;
-    private ToggleButton autoSampleToggleButton;
+    private ToggleButton autoModeToggleButton;
     private Button scanWifiApButton;
     private EditText trainingNumberEditText;
+    private SeekBar autoModeSpeedSeekBar;
 
     private static HashMap<String, WifiData> knownApWifiDataMap;
     private static ArrayList<WifiData> foundWifiDataList;
@@ -93,11 +94,13 @@ public class SensorActivity extends Activity implements SensorEventListener {
     private String fileNameAllSensors;
     private String knownApListString;
 
-    TimerTask timerTask;
+    static TimerTask timerTask;
     final Handler handler = new Handler();
-    Timer t = new Timer();
+    final Timer t = new Timer();
 
     private static boolean ifAutoSample;
+    private static int autoModeSeekBarValue;
+    private static String label;
 
     static final int INTERVAL = 10000;
 
@@ -117,9 +120,10 @@ public class SensorActivity extends Activity implements SensorEventListener {
         sendButton = (Button) findViewById(R.id.sendButton);
         trainingToggleButton = (ToggleButton) findViewById(R.id.trainingToggleButton);
         filterKnownApsToggleButton = (ToggleButton) findViewById(R.id.filterKnownApsToggleButton);
-        autoSampleToggleButton = (ToggleButton) findViewById(R.id.autoSampleToggleButton);
+        autoModeToggleButton = (ToggleButton) findViewById(R.id.autoModeToggleButton);
         scanWifiApButton = (Button) findViewById(R.id.scanWifiApButton);
         trainingNumberEditText = (EditText) findViewById(R.id.trainingNumberEditText);
+        autoModeSpeedSeekBar = (SeekBar) findViewById(R.id.autoModeSpeedSeekBar);
 
         getValuesFromMainActivity();
 
@@ -137,7 +141,9 @@ public class SensorActivity extends Activity implements SensorEventListener {
         populateKnownApList();
 
         ifFilterKnownAP = filterKnownApsToggleButton.isChecked();
-        ifAutoSample = autoSampleToggleButton.isChecked();
+        ifAutoSample = autoModeToggleButton.isChecked();
+        autoModeSeekBarValue = autoModeSpeedSeekBar.getProgress();
+
 
         foundWifiDataList = new ArrayList<WifiData>();
         foundWifiDataMap = new HashMap<String, WifiData>();
@@ -184,19 +190,15 @@ public class SensorActivity extends Activity implements SensorEventListener {
             }
         });
 
-        autoSampleToggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        autoModeToggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     scanWifiApButton.setEnabled(false);
                     saveButton.setEnabled(false);
                     sendButton.setEnabled(false);
-                    trainingToggleButton.setChecked(false);
                     trainingToggleButton.setEnabled(false);
-                    trainingNumberEditText.setText("0");
-                    trainingNumberEditText.setEnabled(false);
-                    filterKnownApsToggleButton.setChecked(true);
-                    filterKnownApsToggleButton.setEnabled(false);
+                    autoModeSpeedSeekBar.setEnabled(false);
                     // start the auto scan process
 
                 } else {
@@ -204,12 +206,51 @@ public class SensorActivity extends Activity implements SensorEventListener {
                     saveButton.setEnabled(true);
                     sendButton.setEnabled(true);
                     trainingToggleButton.setEnabled(true);
-                    trainingNumberEditText.setText("1");
-                    trainingNumberEditText.setEnabled(true);
-                    filterKnownApsToggleButton.setEnabled(true);
+                    autoModeSpeedSeekBar.setEnabled(true);
                 }
 
                 ifAutoSample = isChecked;
+            }
+        });
+
+        autoModeSpeedSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                autoModeSeekBarValue = progress;
+                try{
+                    timerTask.cancel();
+
+                    timerTask = new TimerTask() {
+                        @Override
+                        public void run() {
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if(ifAutoSample) autoSample();
+                                    //Toast.makeText(sensorContext, "timer event", 500).show();
+                                }
+                            });
+                        }
+                    };
+                    t.schedule(timerTask, 100, INTERVAL/(autoModeSeekBarValue+1));
+
+                }
+                catch(Exception ex)
+                {
+                    ex.printStackTrace();
+
+                }
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
             }
         });
 
@@ -226,7 +267,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
                 });
             }
         };
-        t.schedule(timerTask, 300, INTERVAL);
+        t.schedule(timerTask, 100, INTERVAL/(autoModeSeekBarValue+1));
 
     }
 
@@ -337,7 +378,9 @@ public class SensorActivity extends Activity implements SensorEventListener {
         BufferedWriter bw;
         try {
 
-            String label = trainingNumberEditText.getText().toString();
+            label = trainingNumberEditText.getText().toString();
+            if (label.equals("")) label = "-1";
+
             boolean ifTraining = trainingToggleButton.isChecked();
 
             String barometerValueStr = new DecimalFormat("##.##").format(sensorValuesMap.get("Barometer"));
@@ -388,7 +431,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
             bw = new BufferedWriter(new FileWriter(new File(directoryToSave + "/" + fileNameAllOutputs), true));
             bw.write(timestamp+";\n");
             bw.write(ifTraining? "t," : "s,");
-            bw.write(";\n");
+            bw.write(label + ";\n");
             bw.write("magnetometer," + magnetometerValueStr + ";\n"
                     + "barometer," + barometerValueStr + ";\n");
 
@@ -404,7 +447,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
             FileOutputStream out = new FileOutputStream(directoryToSave + "/" + fileNameSingleOutput);
             String str = "";
             str += timestamp + ";\n";
-            str += ifTraining? "t," : "s,";
+            str += ifTraining ? "t," : "s,";
             str += label + ";\n";
             str += "magnetometer," + magnetometerValueStr + ";\n"
                     + "barometer," + barometerValueStr + ";\n";
@@ -441,8 +484,8 @@ public class SensorActivity extends Activity implements SensorEventListener {
 
                 postDataFile(fileNameSingleOutput, "upload_stream.php");
                 postDataFile(fileNameSample, "upload_stream_sample.php");
-                postDataFile(fileNameSamples, "upload_stream_samples.php");
-                str = postDataFile(fileNameTraining, "upload_stream_training.php");
+                str = postDataFile(fileNameSamples, "upload_stream_samples.php");
+                postDataFile(fileNameTraining, "upload_stream_training.php");
 
                 return str;
 
